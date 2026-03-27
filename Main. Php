@@ -1,0 +1,81 @@
+[26/03, 1:11 pm] Kuush Mistry: <?php
+
+class AdminProductEnquiriesController extends ModuleAdminController
+{
+    public function __construct()
+    {
+        $this->table = 'product_enquiry';
+        $this->className = 'ProductEnquiry';
+        $this->bootstrap = true;
+
+        parent::__construct();
+
+        $this->fields_list = [
+            'id_enquiry' => ['title' => 'ID'],
+            'name' => ['title' => 'Customer Name'],
+            'email' => ['title' => 'Email'],
+            'message' => ['title' => 'Message'],
+            'id_product' => ['title' => 'Product ID'],
+            'date_add' => ['title' => 'Date'],
+        ];
+
+        $this->addRowAction('view');
+        $this->addRowAction('delete');
+    }
+}
+[26/03, 6:12 pm] Kuush Mistry: private function installTab()
+{
+    $tab = new Tab();
+    $tab->class_name = 'AdminProductEnquiries';
+    $tab->module = $this->name;
+
+    // IMPORTANT: Catalog ke andar
+    $tab->id_parent = (int)Tab::getIdFromClassName('AdminCatalog');
+
+    foreach (Language::getLanguages(true) as $lang) {
+        $tab->name[$lang['id_lang']] = 'Product Enquiries';
+    }
+
+    return $tab->add();
+}
+
+public function hookHeader()
+{
+    $this->context->controller->addJS($this->_path . 'views/js/script.js');
+
+    Media::addJsDef([
+        'ajaxurl' => $this->context->link->getModuleLink($this->name, 'ajax')
+    ]);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.getElementById("sendform").addEventListener("submit", function (e) {
+        e.preventDefault(); // 👉 stop reload
+
+        let formData = new FormData(this);
+        formData.append("action", "saveEnquiry");
+
+        fetch(ajaxurl, {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                alert("Saved successfully");
+                document.getElementById("sendform").reset();
+            } else {
+                alert("Error");
+            }
+        });
+    });
+
+});
+
+
+public function hookDisplayProductAdditionalInfo($params)
+{
+    return $this->display(__FILE__, 'views/templates/hook/form.tpl');
+}
+
